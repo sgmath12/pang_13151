@@ -1,7 +1,10 @@
 .game-screen {
   position: relative;
-  width: 100vw;
+  width: 100%;
+  max-width: 900px;
   height: 100vh;
+  max-height: 700px;
+  margin: auto;
   overflow: hidden;
   background: #10082b;
 }
