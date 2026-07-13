@@ -4,7 +4,11 @@
   align-items: center;
   justify-content: center;
   gap: 32px;
+  width: 100%;
+  max-width: 1100px;
   height: 100vh;
+  max-height: 820px;
+  margin: auto;
   background: #10082b;
   color: #f4f1ff;
   font-family: 'Courier New', ui-monospace, monospace;

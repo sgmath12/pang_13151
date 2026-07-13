@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import './GameScreen.css'
 
-const PLAYER_WIDTH = 40
+const PLAYER_WIDTH = 60
 const MOVE_SPEED = 6
-const HARPOON_WIDTH = 4
-const HARPOON_HEIGHT = 30
+const HARPOON_WIDTH = 10
+const HARPOON_HEIGHT = 34
 const HARPOON_SPEED = 10
 const GRAVITY = 0.5
 const BALLOON_SIZES = [80, 56, 36, 20]
@@ -301,7 +301,11 @@ function GameScreen({ onGameOver, onClear }: GameScreenProps) {
   return (
     <div className="game-screen" ref={fieldRef}>
       <p className="game-screen__lives">LIVES: {'♥'.repeat(Math.max(lives, 0))}</p>
-      <div className="game-screen__player" style={{ left: playerX }} />
+      <div className="game-screen__player" style={{ left: playerX }}>
+        <div className="game-screen__player-cape" />
+        <div className="game-screen__player-head" />
+        <div className="game-screen__player-body" />
+      </div>
       {harpoons.map((harpoon) => (
         <div
           key={harpoon.id}
