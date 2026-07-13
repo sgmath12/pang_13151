@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import './MainScreen.css'
 
-const MENU_ITEMS = ['미션 1', '시작', '게임 종료']
+const MENU_ITEMS = ['시작', '게임 종료']
 
 function MainScreen() {
   const [selectedIndex, setSelectedIndex] = useState(0)
