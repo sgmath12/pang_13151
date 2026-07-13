@@ -1,0 +1,16 @@
+.game-screen {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #10082b;
+}
+
+.game-screen__player {
+  position: absolute;
+  bottom: 24px;
+  width: 40px;
+  height: 40px;
+  background: #00e0ff;
+  border: 3px solid #ffe94d;
+}
