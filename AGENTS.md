@@ -5,6 +5,7 @@
 ## 기획 문서 위치
 
 - `docs/PRD.md` — 팡(PANG) 게임 전체 개요 및 상위 수준 PRD.
+- `docs/PLAN.md` — Phase별 목표를 세운 파일.
 - `docs/FEATURES/main.md` — 첫 메인 화면 구성 초안.
 - `docs/FEATURES/game_rule.md` — 게임 룰 상세 내용 (풍선 분열, 조작, 클리어 조건 등).
 - `docs/FEATURES/mission1.md` — 미션 1(첫 스테이지)의 난이도 및 규칙 초안.
