@@ -35,6 +35,15 @@ npx tsc --noEmit -p tsconfig.app.json
 
 테스트 프레임워크(Vitest 등)를 새로 도입할 경우 이 섹션을 갱신할 것.
 
+## 기획/설계 문서
+
+- `docs/PRD.md` — 팡(PANG) 게임 전체 개요 및 상위 수준 PRD.
+- `docs/PLAN.md` — Phase별 목표를 세운 파일.
+- `docs/FEATURES/main.md`, `game_rule.md`, `mission1.md` — 메인 화면, 게임 룰, 미션 1 상세 기획.
+- `docs/design/phaseN.md` — 각 Phase 구현 설계 문서 (`docs/PLAN.md`의 Phase 번호와 1:1 대응). 새 Phase 설계 시 동일한 이름 규칙(`phase2.md`, `phase3.md`, ...)으로 `docs/design/`에 추가하고, 이 목록은 별도로 갱신할 필요 없음.
+
+코드 작업 전 위 문서들을 먼저 확인하여 기획/설계 의도와 어긋나지 않도록 한다.
+
 ## 아키텍처
 
 - 프로젝트 루트에 Vite/TS 설정이 3중 구조로 분리되어 있음: `tsconfig.json`(참조만 지님) → `tsconfig.app.json`(src 앱 코드용, `noEmit`, `jsx: react-jsx`), `tsconfig.node.json`(Vite 설정 파일 등 Node 환경용). 새 tsconfig 옵션 추가 시 어느 파일에 속하는지 구분해야 함.

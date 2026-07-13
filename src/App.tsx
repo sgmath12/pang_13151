@@ -1,11 +1,7 @@
-import './App.css'
+import MainScreen from './screens/MainScreen'
 
 function App() {
-  return (
-    <div className="hello-world">
-      <h1>Hello World</h1>
-    </div>
-  )
+  return <MainScreen />
 }
 
 export default App
