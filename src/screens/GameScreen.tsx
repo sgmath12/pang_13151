@@ -65,8 +65,8 @@ function GameScreen() {
   useEffect(() => {
     const field = fieldRef.current
     if (field) {
-      setPlayerX(field.clientWidth / 2 - PLAYER_WIDTH / 2)
-      setBalloons([
+      const initialPlayerX = field.clientWidth / 2 - PLAYER_WIDTH / 2
+      const initialBalloons: Balloon[] = [
         {
           id: nextBalloonId.current++,
           x: field.clientWidth * 0.3,
@@ -83,7 +83,16 @@ function GameScreen() {
           vy: 0,
           sizeIndex: 0,
         },
-      ])
+      ]
+
+      // Write refs synchronously here too: the tick loop's first
+      // requestAnimationFrame can fire before the ref-sync effects below
+      // have run, and it would otherwise read stale empty refs and
+      // immediately overwrite this initial state with an empty array.
+      playerXRef.current = initialPlayerX
+      balloonsRef.current = initialBalloons
+      setPlayerX(initialPlayerX)
+      setBalloons(initialBalloons)
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
