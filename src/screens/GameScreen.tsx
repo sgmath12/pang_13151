@@ -9,6 +9,7 @@ const HARPOON_SPEED = 10
 const GRAVITY = 0.5
 const BALLOON_SIZES = [80, 56, 36, 20]
 const BALLOON_BASE_SPEED = 2
+const STARTING_LIVES = 3
 const SCROLL_KEYS = new Set([
   'ArrowLeft',
   'ArrowRight',
@@ -27,6 +28,10 @@ type Balloon = {
   sizeIndex: number
 }
 
+type GameScreenProps = {
+  onGameOver: () => void
+}
+
 function rectsOverlap(
   ax: number,
   ay: number,
@@ -40,15 +45,39 @@ function rectsOverlap(
   return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by
 }
 
-function GameScreen() {
+function createInitialBalloons(fieldWidth: number, nextId: () => number): Balloon[] {
+  return [
+    {
+      id: nextId(),
+      x: fieldWidth * 0.3,
+      y: 40,
+      vx: BALLOON_BASE_SPEED,
+      vy: 0,
+      sizeIndex: 0,
+    },
+    {
+      id: nextId(),
+      x: fieldWidth * 0.6,
+      y: 100,
+      vx: -BALLOON_BASE_SPEED,
+      vy: 0,
+      sizeIndex: 0,
+    },
+  ]
+}
+
+function GameScreen({ onGameOver }: GameScreenProps) {
   const [playerX, setPlayerX] = useState(0)
   const [harpoons, setHarpoons] = useState<Harpoon[]>([])
   const [balloons, setBalloons] = useState<Balloon[]>([])
+  const [lives, setLives] = useState(STARTING_LIVES)
   const fieldRef = useRef<HTMLDivElement>(null)
   const pressedKeys = useRef(new Set<string>())
   const playerXRef = useRef(playerX)
   const harpoonsRef = useRef<Harpoon[]>([])
   const balloonsRef = useRef<Balloon[]>([])
+  const livesRef = useRef(STARTING_LIVES)
+  const onGameOverRef = useRef(onGameOver)
   const nextHarpoonId = useRef(0)
   const nextBalloonId = useRef(0)
 
@@ -61,29 +90,20 @@ function GameScreen() {
   useEffect(() => {
     balloonsRef.current = balloons
   }, [balloons])
+  useEffect(() => {
+    livesRef.current = lives
+  }, [lives])
+  useEffect(() => {
+    onGameOverRef.current = onGameOver
+  }, [onGameOver])
 
   useEffect(() => {
     const field = fieldRef.current
     if (field) {
       setPlayerX(field.clientWidth / 2 - PLAYER_WIDTH / 2)
-      setBalloons([
-        {
-          id: nextBalloonId.current++,
-          x: field.clientWidth * 0.3,
-          y: 40,
-          vx: BALLOON_BASE_SPEED,
-          vy: 0,
-          sizeIndex: 0,
-        },
-        {
-          id: nextBalloonId.current++,
-          x: field.clientWidth * 0.6,
-          y: 100,
-          vx: -BALLOON_BASE_SPEED,
-          vy: 0,
-          sizeIndex: 0,
-        },
-      ])
+      setBalloons(
+        createInitialBalloons(field.clientWidth, () => nextBalloonId.current++),
+      )
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -118,12 +138,14 @@ function GameScreen() {
       const fieldWidth = fieldRef.current?.clientWidth ?? 0
       const fieldHeight = fieldRef.current?.clientHeight ?? 0
 
+      let updatedPlayerX = playerXRef.current
       setPlayerX((current) => {
         let next = current
         if (pressedKeys.current.has('ArrowLeft')) next -= MOVE_SPEED
         if (pressedKeys.current.has('ArrowRight')) next += MOVE_SPEED
         const maxX = fieldWidth - PLAYER_WIDTH
-        return Math.max(0, Math.min(maxX, next))
+        updatedPlayerX = Math.max(0, Math.min(maxX, next))
+        return updatedPlayerX
       })
 
       const movedHarpoons = harpoonsRef.current
@@ -157,7 +179,7 @@ function GameScreen() {
       })
 
       const hitHarpoonIds = new Set<number>()
-      const resultBalloons: Balloon[] = []
+      const survivingBalloons: Balloon[] = []
 
       for (const balloon of movedBalloons) {
         const diameter = BALLOON_SIZES[balloon.sizeIndex]
@@ -177,7 +199,7 @@ function GameScreen() {
         )
 
         if (!hitHarpoon) {
-          resultBalloons.push(balloon)
+          survivingBalloons.push(balloon)
           continue
         }
 
@@ -187,7 +209,7 @@ function GameScreen() {
         if (childSizeIndex >= BALLOON_SIZES.length) continue
 
         const childSpeed = BALLOON_BASE_SPEED * (1 + childSizeIndex * 0.7)
-        resultBalloons.push(
+        survivingBalloons.push(
           {
             id: nextBalloonId.current++,
             x: balloon.x,
@@ -207,10 +229,38 @@ function GameScreen() {
         )
       }
 
-      setHarpoons(
-        movedHarpoons.filter((harpoon) => !hitHarpoonIds.has(harpoon.id)),
+      const playerTop = fieldHeight - 24 - PLAYER_WIDTH
+      const touchedPlayer = survivingBalloons.some((balloon) =>
+        rectsOverlap(
+          updatedPlayerX,
+          playerTop,
+          PLAYER_WIDTH,
+          PLAYER_WIDTH,
+          balloon.x,
+          balloon.y,
+          BALLOON_SIZES[balloon.sizeIndex],
+          BALLOON_SIZES[balloon.sizeIndex],
+        ),
       )
-      setBalloons(resultBalloons)
+
+      if (touchedPlayer) {
+        const remainingLives = livesRef.current - 1
+        setLives(remainingLives)
+        setHarpoons([])
+        if (remainingLives <= 0) {
+          setBalloons([])
+          onGameOverRef.current()
+        } else {
+          setBalloons(
+            createInitialBalloons(fieldWidth, () => nextBalloonId.current++),
+          )
+        }
+      } else {
+        setHarpoons(
+          movedHarpoons.filter((harpoon) => !hitHarpoonIds.has(harpoon.id)),
+        )
+        setBalloons(survivingBalloons)
+      }
 
       frameId = requestAnimationFrame(tick)
     }
@@ -225,6 +275,7 @@ function GameScreen() {
 
   return (
     <div className="game-screen" ref={fieldRef}>
+      <p className="game-screen__lives">LIVES: {'♥'.repeat(Math.max(lives, 0))}</p>
       <div className="game-screen__player" style={{ left: playerX }} />
       {harpoons.map((harpoon) => (
         <div

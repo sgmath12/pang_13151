@@ -6,6 +6,18 @@
   background: #10082b;
 }
 
+.game-screen__lives {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  margin: 0;
+  color: #ffe94d;
+  font-family: 'Courier New', ui-monospace, monospace;
+  font-size: 20px;
+  letter-spacing: 2px;
+  z-index: 1;
+}
+
 .game-screen__player {
   position: absolute;
   bottom: 24px;
