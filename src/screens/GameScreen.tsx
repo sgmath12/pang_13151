@@ -5,15 +5,23 @@ const PLAYER_WIDTH = 40
 const MOVE_SPEED = 6
 const HARPOON_WIDTH = 4
 const HARPOON_SPEED = 10
+const SCROLL_KEYS = new Set([
+  'ArrowLeft',
+  'ArrowRight',
+  'ArrowUp',
+  'ArrowDown',
+  ' ',
+])
 
-type Harpoon = { x: number; y: number }
+type Harpoon = { id: number; x: number; y: number }
 
 function GameScreen() {
   const [playerX, setPlayerX] = useState(0)
-  const [harpoon, setHarpoon] = useState<Harpoon | null>(null)
+  const [harpoons, setHarpoons] = useState<Harpoon[]>([])
   const fieldRef = useRef<HTMLDivElement>(null)
   const pressedKeys = useRef(new Set<string>())
   const playerXRef = useRef(playerX)
+  const nextHarpoonId = useRef(0)
 
   useEffect(() => {
     playerXRef.current = playerX
@@ -26,16 +34,22 @@ function GameScreen() {
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (SCROLL_KEYS.has(event.key)) {
+        event.preventDefault()
+      }
+
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
         pressedKeys.current.add(event.key)
       } else if (event.key === ' ') {
-        setHarpoon((current) => {
-          if (current) return current
-          return {
+        const id = nextHarpoonId.current++
+        setHarpoons((current) => [
+          ...current,
+          {
+            id,
             x: playerXRef.current + PLAYER_WIDTH / 2 - HARPOON_WIDTH / 2,
             y: 24 + PLAYER_WIDTH,
-          }
-        })
+          },
+        ])
       }
     }
     const handleKeyUp = (event: KeyboardEvent) => {
@@ -54,12 +68,12 @@ function GameScreen() {
         if (pressedKeys.current.has('ArrowRight')) next += MOVE_SPEED
         return Math.max(0, Math.min(maxX, next))
       })
-      setHarpoon((current) => {
-        if (!current) return current
-        const fieldHeight = fieldRef.current?.clientHeight ?? 0
-        const nextY = current.y + HARPOON_SPEED
-        return nextY > fieldHeight ? null : { ...current, y: nextY }
-      })
+      const fieldHeight = fieldRef.current?.clientHeight ?? 0
+      setHarpoons((current) =>
+        current
+          .map((harpoon) => ({ ...harpoon, y: harpoon.y + HARPOON_SPEED }))
+          .filter((harpoon) => harpoon.y <= fieldHeight),
+      )
       frameId = requestAnimationFrame(tick)
     }
     frameId = requestAnimationFrame(tick)
@@ -74,12 +88,13 @@ function GameScreen() {
   return (
     <div className="game-screen" ref={fieldRef}>
       <div className="game-screen__player" style={{ left: playerX }} />
-      {harpoon && (
+      {harpoons.map((harpoon) => (
         <div
+          key={harpoon.id}
           className="game-screen__harpoon"
           style={{ left: harpoon.x, bottom: harpoon.y }}
         />
-      )}
+      ))}
     </div>
   )
 }
