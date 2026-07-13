@@ -1,0 +1,36 @@
+.clear-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  height: 100vh;
+  background: #10082b;
+  color: #f4f1ff;
+  font-family: 'Courier New', ui-monospace, monospace;
+  text-align: center;
+}
+
+.clear-screen h1 {
+  margin: 0;
+  font-size: 40px;
+  letter-spacing: 4px;
+  color: #ffe94d;
+  text-shadow:
+    3px 3px 0 #00e0ff,
+    6px 6px 0 #ff3fa4;
+}
+
+.clear-screen button {
+  font-family: inherit;
+  font-size: 16px;
+  padding: 8px 24px;
+  color: #ffe94d;
+  background: transparent;
+  border: 3px solid #00e0ff;
+  cursor: pointer;
+}
+
+.clear-screen button:hover {
+  border-color: #ff3fa4;
+}

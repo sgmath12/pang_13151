@@ -30,19 +30,27 @@ type Balloon = {
 
 type GameScreenProps = {
   onGameOver: () => void
+  onClear: () => void
 }
 
-function rectsOverlap(
-  ax: number,
-  ay: number,
-  aw: number,
-  ah: number,
-  bx: number,
-  by: number,
-  bw: number,
-  bh: number,
+// Balloons render as circles, while the player/harpoon are rects — an AABB
+// check between their bounding boxes flags false hits at the box corners
+// where the round balloon sprite isn't actually touching. Treat the balloon
+// as a circle and test distance to the closest point on the other rect instead.
+function circleOverlapsRect(
+  cx: number,
+  cy: number,
+  radius: number,
+  rx: number,
+  ry: number,
+  rw: number,
+  rh: number,
 ) {
-  return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by
+  const closestX = Math.max(rx, Math.min(cx, rx + rw))
+  const closestY = Math.max(ry, Math.min(cy, ry + rh))
+  const dx = cx - closestX
+  const dy = cy - closestY
+  return dx * dx + dy * dy < radius * radius
 }
 
 function createInitialBalloons(fieldWidth: number, nextId: () => number): Balloon[] {
@@ -66,7 +74,7 @@ function createInitialBalloons(fieldWidth: number, nextId: () => number): Balloo
   ]
 }
 
-function GameScreen({ onGameOver }: GameScreenProps) {
+function GameScreen({ onGameOver, onClear }: GameScreenProps) {
   const [playerX, setPlayerX] = useState(0)
   const [harpoons, setHarpoons] = useState<Harpoon[]>([])
   const [balloons, setBalloons] = useState<Balloon[]>([])
@@ -78,6 +86,7 @@ function GameScreen({ onGameOver }: GameScreenProps) {
   const balloonsRef = useRef<Balloon[]>([])
   const livesRef = useRef(STARTING_LIVES)
   const onGameOverRef = useRef(onGameOver)
+  const onClearRef = useRef(onClear)
   const nextHarpoonId = useRef(0)
   const nextBalloonId = useRef(0)
 
@@ -96,6 +105,9 @@ function GameScreen({ onGameOver }: GameScreenProps) {
   useEffect(() => {
     onGameOverRef.current = onGameOver
   }, [onGameOver])
+  useEffect(() => {
+    onClearRef.current = onClear
+  }, [onClear])
 
   useEffect(() => {
     const field = fieldRef.current
@@ -183,18 +195,20 @@ function GameScreen({ onGameOver }: GameScreenProps) {
 
       for (const balloon of movedBalloons) {
         const diameter = BALLOON_SIZES[balloon.sizeIndex]
+        const radius = diameter / 2
+        const cx = balloon.x + radius
+        const cy = balloon.y + radius
         const hitHarpoon = movedHarpoons.find(
           (harpoon) =>
             !hitHarpoonIds.has(harpoon.id) &&
-            rectsOverlap(
+            circleOverlapsRect(
+              cx,
+              cy,
+              radius,
               harpoon.x,
               harpoon.top,
               HARPOON_WIDTH,
               HARPOON_HEIGHT,
-              balloon.x,
-              balloon.y,
-              diameter,
-              diameter,
             ),
         )
 
@@ -230,18 +244,19 @@ function GameScreen({ onGameOver }: GameScreenProps) {
       }
 
       const playerTop = fieldHeight - 24 - PLAYER_WIDTH
-      const touchedPlayer = survivingBalloons.some((balloon) =>
-        rectsOverlap(
+      const touchedPlayer = survivingBalloons.some((balloon) => {
+        const diameter = BALLOON_SIZES[balloon.sizeIndex]
+        const radius = diameter / 2
+        return circleOverlapsRect(
+          balloon.x + radius,
+          balloon.y + radius,
+          radius,
           updatedPlayerX,
           playerTop,
           PLAYER_WIDTH,
           PLAYER_WIDTH,
-          balloon.x,
-          balloon.y,
-          BALLOON_SIZES[balloon.sizeIndex],
-          BALLOON_SIZES[balloon.sizeIndex],
-        ),
-      )
+        )
+      })
 
       if (touchedPlayer) {
         const remainingLives = livesRef.current - 1
@@ -260,6 +275,9 @@ function GameScreen({ onGameOver }: GameScreenProps) {
           movedHarpoons.filter((harpoon) => !hitHarpoonIds.has(harpoon.id)),
         )
         setBalloons(survivingBalloons)
+        if (survivingBalloons.length === 0 && movedBalloons.length > 0) {
+          onClearRef.current()
+        }
       }
 
       frameId = requestAnimationFrame(tick)
