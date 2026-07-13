@@ -21,3 +21,12 @@
   height: 30px;
   background: #ff3fa4;
 }
+
+.game-screen__balloon {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #ff3fa4;
+  border: 3px solid #ffe94d;
+}
